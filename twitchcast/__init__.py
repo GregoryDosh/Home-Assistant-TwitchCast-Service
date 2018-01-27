@@ -47,11 +47,11 @@ class TwitchCastController(BaseController):
         if self._setup_valid:
             _LOGGER.info("setup completed successfully")
         else:
-            _LOGGER.warning("setup failed")
+            _LOGGER.error("setup failed")
             if not self._cast:
-                _LOGGER.warning("no cast device")
+                _LOGGER.error("no cast device")
             if not self._selected_location:
-                _LOGGER.warning("no location")
+                _LOGGER.error("no location")
             return False
         return True
 
@@ -162,6 +162,8 @@ class TwitchCastController(BaseController):
             return ""
 
     def _check_app_id(self, timeout: int=10) -> bool:
+        if not self.cast:
+            return False
         if self.cast.app_id != self._expected_app_id:
             self.launch()
         for t in range(timeout * 5):
@@ -237,9 +239,9 @@ class TwitchCastController(BaseController):
                             layout=layout,
                             content_id=content_id))
             else:
-                _LOGGER.warning("timed out waiting on chromecast")
+                _LOGGER.error("timed out waiting on chromecast")
         else:
-            _LOGGER.warning("couldn't get content_id for {}".format(channel))
+            _LOGGER.error("couldn't get content_id for {}".format(channel))
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:

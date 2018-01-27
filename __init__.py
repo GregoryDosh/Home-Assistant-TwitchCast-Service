@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'twitchcast'
 
 CONF_CHROMECAST_NAME = 'chromecast_name'
+CONF_CHROMECAST_HOST = 'chromecast_host'
 CONF_TWITCHCAST_CHANNEL = 'channel'
 CONF_TWITCHCAST_LAYOUT = 'layout'
 CONF_TWITCHCAST_LAYOUT_OPTIONS = ['right', 'left', 'top', 'bottom']
@@ -32,7 +33,11 @@ SERVICE_STREAM_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_CHROMECAST_NAME): cv.string,
+        vol.Required(vol.Any(CONF_CHROMECAST_NAME,
+                             CONF_CHROMECAST_HOST),
+                     msg="Need {} or {}.".format(CONF_CHROMECAST_NAME,
+                                                 CONF_CHROMECAST_HOST)):
+        cv.string,
         vol.Optional(CONF_TWITCHCAST_LAYOUT,
                      default=CONF_TWITCHCAST_LAYOUT_OPTIONS[0]):
         vol.In(CONF_TWITCHCAST_LAYOUT_OPTIONS),
@@ -46,7 +51,15 @@ def async_setup(hass, config):
     config = config.get(DOMAIN, {})
 
     from .twitchcast import TwitchCastController
-    tcc = TwitchCastController(config[CONF_CHROMECAST_NAME])
+
+    if CONF_CHROMECAST_HOST in config:
+        tcc = TwitchCastController(chromecast_host=config[
+                                   CONF_CHROMECAST_HOST
+                                   ])
+    else:
+        tcc = TwitchCastController(chromecast_name=config[
+                                   CONF_CHROMECAST_NAME
+                                   ])
 
     hass.data[DOMAIN] = {
         TWITCHCAST_CONTROLLER: tcc

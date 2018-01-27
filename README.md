@@ -18,9 +18,14 @@ git submodule add -b master git@github.com:GregoryDosh/Home-Assistant-TwitchCast
 ## Example Configuration
 ```yaml
 twitchcast:
-  chromecast_name: Living Room TV
+  chromecast_host: 172.16.16.205
   layout: right
+```
 
+```yaml
+twitchcast:
+  chromecast_name: Living Room TV
+  layout: left
 ```
 
 ## Services
