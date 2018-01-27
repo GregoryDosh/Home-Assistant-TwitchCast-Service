@@ -47,7 +47,6 @@ def async_setup(hass, config):
 
     from .twitchcast import TwitchCastController
     tcc = TwitchCastController(config[CONF_CHROMECAST_NAME])
-    tcc.setup()
 
     hass.data[DOMAIN] = {
         TWITCHCAST_CONTROLLER: tcc
