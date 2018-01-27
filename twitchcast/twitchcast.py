@@ -189,7 +189,6 @@ class TwitchCastController(BaseController):
                 'layout': layout,
             },
         }
-        print(msg['media']['metadata'])
         _LOGGER.debug("sending chromecast message {}".format(msg))
         self.send_message(msg)
 
