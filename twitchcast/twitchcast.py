@@ -1,4 +1,8 @@
-"""Custom code to manipulate a Chromecast through pychromecast."""
+"""
+Start Twitch.TV streams with chat on your Chromecast using TwitchCast.
+
+Uses servers provided by http://nightdev.com/twitchcast/ for stream and chat
+"""
 import json
 import logging
 import pychromecast
@@ -6,12 +10,13 @@ import random
 import requests
 import sys
 import time
-from fake_useragent import UserAgent
 from functools import partial
 from pychromecast import get_chromecasts, Chromecast
 from pychromecast.controllers import BaseController
 
-REQUIREMENTS = ['pychromecast==1.0.3', 'fake-useragent==0.1.8']
+REQUIREMENTS = ['pychromecast==1.0.3']
+
+__version__ = '0.1.1'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +34,10 @@ class TwitchCastController(BaseController):
         self._chromecast_host = chromecast_host
         self._chromecast_name = chromecast_name
         self._expected_app_id = 'DAC1CD8C'
-        self._headers = {'User-Agent': UserAgent().chrome}
+        self._headers = {
+            'User-Agent': "Home-Assistant-TwitchCast-Service {}"
+                          .format(__version__)
+        }
         self._selected_location = None  # type: str
         self._setup_valid = False
 
