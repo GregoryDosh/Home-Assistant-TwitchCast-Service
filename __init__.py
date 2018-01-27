@@ -45,7 +45,7 @@ def async_setup(hass, config):
     """Setup TwitchCast."""
     config = config.get(DOMAIN, {})
 
-    from twitchcast import TwitchCastController
+    from .twitchcast import TwitchCastController
     tcc = TwitchCastController(config[CONF_CHROMECAST_NAME])
     tcc.setup()
 
