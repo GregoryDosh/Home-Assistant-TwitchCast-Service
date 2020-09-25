@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pychromecast==1.0.3']
+REQUIREMENTS = ['pychromecast>=1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -16,10 +16,9 @@ from pychromecast.controllers import BaseController
 
 REQUIREMENTS = ['pychromecast>=1.0.3']
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 
 _LOGGER = logging.getLogger(__name__)
-
 
 class TwitchCastController(BaseController):
     """Controller used to send TwitchCast streams to a Chromecast."""
@@ -34,24 +33,21 @@ class TwitchCastController(BaseController):
         self._chromecast_host = chromecast_host
         self._chromecast_name = chromecast_name
         self._expected_app_id = 'DAC1CD8C'
+        self._setup_valid = False
         self._headers = {
             'User-Agent': "Home-Assistant-TwitchCast-Service {}"
                           .format(__version__)
         }
-        self._selected_location = None  # type: str
-        self._setup_valid = False
+        self._location = "https://hls-us-west.nightdev.com"
 
     def _setup(self) -> bool:
-        self._setup_valid = self._setup_chromecast() and \
-            self._setup_locations()
+        self._setup_valid = self._setup_chromecast()
         if self._setup_valid:
             _LOGGER.info("setup completed successfully")
         else:
             _LOGGER.error("setup failed")
             if not self._cast:
                 _LOGGER.error("no cast device")
-            if not self._selected_location:
-                _LOGGER.error("no location")
             return False
         return True
 
@@ -60,6 +56,7 @@ class TwitchCastController(BaseController):
             try:
                 self._cast = Chromecast(host=self._chromecast_host)
                 self._cast.register_handler(self)
+                self._cast.wait()
                 return True
             except pychromecast.error.ChromecastConnectionError:
                 _LOGGER.error("cannot find {}".format(self._chromecast_host))
@@ -69,46 +66,13 @@ class TwitchCastController(BaseController):
                                   cc.device.friendly_name ==
                                   self._chromecast_name)
                 self._cast.register_handler(self)
+                self._cast.wait()
                 return True
             except StopIteration:
                 _LOGGER.error("cannot find {}".format(self._chromecast_name))
         else:
             _LOGGER.error("no chromecast host or name defined.")
         return False
-
-    def _setup_locations(self) -> bool:
-        r = requests.get('http://nightdev.com/twitchcast/pops.json?{}'.format(
-            random.random()), headers=self._headers)
-        locations = []  # type: List[Dict[str, Dict[str, object]]]
-        if r.status_code == 200:
-            try:
-                locations = json.loads(r.text)
-            except ValueError:
-                _LOGGER.error("error parsing populations")
-        updated_locations = []
-        for location in locations:
-            r = requests.get('{}/stats?callback=?'.format(location['url']),
-                             headers=self._headers)
-            if r.status_code == 200:
-                try:
-                    location['status'] = json.loads(r.text[2:-2])
-                    location['status']['latency'] = r.elapsed
-                except ValueError:
-                    continue
-                updated_locations.append(location)
-        if updated_locations:
-            self._selected_location = sorted(
-                updated_locations, key=lambda x: x['status']['latency']
-            )[0]['url']
-            return True
-        return False
-
-    @property
-    def _location(self) -> str:
-        """Get selected location or find one if needed."""
-        if not self._selected_location:
-            self._setup_locations()
-        return self._selected_location
 
     @property
     def cast(self) -> Chromecast:
@@ -119,7 +83,7 @@ class TwitchCastController(BaseController):
 
     def _get_content_id(self, channel: str) -> str:
         _LOGGER.debug("getting content_id for {}".format(channel))
-        r = requests.get('http://nightdev.com/twitchcast/token.php?channel={}'.
+        r = requests.get('https://nightdev.com/api/1/twitchcast/token?channel={}'.
                          format(requests.utils.quote(channel)),
                          headers=self._headers)
         token, sig = "", ""
@@ -161,7 +125,7 @@ class TwitchCastController(BaseController):
         else:
             return ""
 
-    def _check_app_id(self, timeout: int=10) -> bool:
+    def _check_app_id(self, timeout: int = 10) -> bool:
         if not self.cast:
             return False
         if self.cast.app_id != self._expected_app_id:
